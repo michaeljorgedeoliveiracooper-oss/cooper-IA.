@@ -148,4 +148,6 @@ app.post("/api/generate", requireAuth, aiLimiter, async (req, res) => {
 app.use(express.static(path.join(__dirname, "public")));
 app.get("*", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 
-app.listen(PORT, () => console.log(`Cooper IA disponível em http://localhost:${PORT}`));
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Cooper IA funcionando na porta ${PORT}`);
+});
