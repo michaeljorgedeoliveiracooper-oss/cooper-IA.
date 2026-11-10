@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cooper IA</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1020;color:white;font-family:Arial,sans-serif}
+main{max-width:700px;margin:40px auto;padding:25px}
+header{text-align:center;padding:25px}
+header h1{font-size:38px;color:#56a8ff}
+header p{color:#b8c5df}
+.card{background:#18233d;padding:25px;border-radius:18px;margin-top:20px}
+input,select,textarea,button{width:100%;padding:14px;margin:8px 0;border:0;border-radius:9px;font-size:16px}
+button{background:#2878ee;color:white;font-weight:bold;cursor:pointer}
+textarea{height:120px}
+button:hover{background:#155dcc}
+#app{display:none}
+#result{white-space:pre-wrap;line-height:1.6;margin-top:15px}
+.small{color:#9baac4;font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Cooper IA</h1>
+<p>Sua inteligência artificial para criar, vender e crescer.</p>
+</header>
+
+<section class="card" id="auth">
+<h2>Acesse sua conta</h2>
+<input id="name" placeholder="Seu nome">
+<input id="email" type="email" placeholder="Seu e-mail">
+<input id="password" type="password" placeholder="Sua senha">
+<button onclick="auth('login')">Entrar</button>
+<button onclick="auth('register')">Criar conta</button>
+<p class="small" id="message"></p>
+</section>
+
+<section class="card" id="app">
+<h2 id="welcome">Bem-vindo!</h2>
+<label>Escolha sua ferramenta</label>
+<select id="tool">
+<option value="anuncio">Criar anúncio</option>
+<option value="venda">Texto de venda</option>
+<option value="roteiro">Roteiro de vídeo</option>
+</select>
+<textarea id="prompt" placeholder="Descreva o que deseja criar..."></textarea>
+<button onclick="generate()">Gerar conteúdo</button>
+<h3>Resultado</h3>
+<div id="result"></div>
+<button onclick="logout()">Sair da conta</button>
+</section>
+</main>
+<script>
+const el=id=>document.getElementById(id);
+async function api(url,data){
+ const r=await fetch(url,{
+  method:data?'POST':'GET',
+  credentials:'same-origin',
+  headers:{'Content-Type':'application/json'},
+  body:data?JSON.stringify(data):undefined
+ });
+ const j=await r.json();
+ if(!r.ok)throw Error(j.error||'Ocorreu um erro');
+ return j;
+}
+async function auth(type){
+ try{
+  const data={email:el('email').value,password:el('password').value};
+  if(type==='register')data.name=el('name').value;
+  await api('/api/'+type,data);
+  await check();
+ }catch(e){el('message').textContent=e.message}
+}
+async function check(){
+ try{
+  const d=await api('/api/me');
+  el('auth').style.display='none';
+  el('app').style.display='block';
+  el('welcome').textContent='Olá, '+d.user.name+'!';
+ }catch(e){
+  el('auth').style.display='block';
+  el('app').style.display='none';
+ }
+}
+async function generate(){
+ el('result').textContent='Gerando...';
+ try{
+  const d=await api('/api/generate',{
+   tool:el('tool').value,
+   prompt:el('prompt').value
+  });
+  el('result').textContent=d.result;
+ }catch(e){el('result').textContent=e.message}
+}
+async function logout(){
+ try{await api('/api/logout',{});location.reload()}
+ catch(e){el('message').textContent=e.message}
+}
+check();
+</script>
+</body>
+</html>
